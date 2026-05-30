@@ -902,6 +902,19 @@
 </style>
 
 <!-- ============================================================
+     Supabase REST API (no SDK — plain fetch)
+     ============================================================ -->
+<script>
+  var SUPABASE_URL      = 'https://ufeplmhwxqxzdtzaocqp.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmZXBsbWh3eHF4emR0emFvY3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxMjA0MTQsImV4cCI6MjA5NTY5NjQxNH0.ayrxmqQTXw4MNzZt-MwGSckuaaPPXonM9RZvccDXHGI';
+  var SUPABASE_HEADERS  = {
+    'apikey':        SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+    'Content-Type':  'application/json',
+  };
+</script>
+
+<!-- ============================================================
      OpenRouter API Integration
      ============================================================ -->
 <script>
@@ -1029,7 +1042,6 @@ MESSAGE:
   /* ============================================================
      Constants & State
      ============================================================ */
-  const STORAGE_KEY = 'ai_diary_entries';
   const MAX_CHARS   = 500;
   const NEAR_LIMIT  = 420; // ~84% — triggers yellow counter
 
@@ -1204,16 +1216,14 @@ MESSAGE:
       hideLoading();
       renderResponse(result);
 
-      // Persist entry to localStorage
-      saveEntry({
+      await saveEntry({
         text,
         emoji:   result.emoji   || '',
         tags:    result.tags    || [],
         message: result.message || '',
-        date:    new Date().toISOString(),
       });
 
-      renderEntries();
+      await renderEntries();
 
       // Clear the textarea after successful save
       diaryInput.value = '';
@@ -1231,49 +1241,64 @@ MESSAGE:
   });
 
   /* ============================================================
-     localStorage helpers
+     Supabase helpers (plain fetch — no SDK)
      ============================================================ */
-  function loadEntries() {
+  const REST = SUPABASE_URL + '/rest/v1/diary_entries';
+
+  async function loadEntries() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      // Handles: JSON.parse 실패, localStorage 접근 불가 (Private Browsing 등)
+      const res = await fetch(REST + '?select=*&order=created_at.desc', {
+        headers: SUPABASE_HEADERS,
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const rows = await res.json();
+      return rows.map(row => ({
+        text:    row.text,
+        emoji:   row.emoji,
+        tags:    row.tags,
+        message: row.message,
+        date:    row.created_at,
+        id:      row.id,
+      }));
+    } catch (e) {
+      console.warn('[AI Diary] 불러오기 실패:', e);
       return [];
     }
   }
 
-  /*
-    BUG-2 FIX: saveEntry의 localStorage.setItem을 try/catch로 감쌈
-    Private Browsing, 스토리지 용량 초과(QuotaExceededError),
-    보안 정책(SecurityError) 등의 예외가 앱 전체를 중단시키지 않도록 처리합니다.
-    저장 실패 시 사용자에게 경고를 표시하고 나머지 플로우(renderEntries 등)는 계속 진행됩니다.
-  */
-  function saveEntry(entry) {
-    try {
-      const entries = loadEntries();
-      // Newest first
-      entries.unshift(entry);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-    } catch (e) {
-      console.warn('[AI Diary] localStorage 저장 실패 (Private Browsing 또는 용량 초과):', e);
-      showError('일기가 저장되지 않았습니다. 시크릿/비공개 창에서는 기록이 유지되지 않아요.');
+  async function saveEntry(entry) {
+    const res = await fetch(REST, {
+      method:  'POST',
+      headers: { ...SUPABASE_HEADERS, 'Prefer': 'return=minimal' },
+      body:    JSON.stringify({
+        text:    entry.text,
+        emoji:   entry.emoji   || '',
+        tags:    entry.tags    || [],
+        message: entry.message || '',
+      }),
+    });
+    if (!res.ok) {
+      const msg = await res.text();
+      console.warn('[AI Diary] 저장 실패:', msg);
+      showError('일기 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
     }
   }
 
-  function clearEntries() {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch (e) {
-      console.warn('[AI Diary] localStorage 삭제 실패:', e);
+  async function clearEntries() {
+    const res = await fetch(REST + '?id=not.is.null', {
+      method:  'DELETE',
+      headers: SUPABASE_HEADERS,
+    });
+    if (!res.ok) {
+      console.warn('[AI Diary] 삭제 실패:', await res.text());
     }
   }
 
   /* ============================================================
      Accordion — render previous entries
      ============================================================ */
-  function renderEntries() {
-    const entries = loadEntries();
+  async function renderEntries() {
+    const entries = await loadEntries();
     entriesContainer.innerHTML = '';
 
     if (entries.length === 0) {
@@ -1368,18 +1393,19 @@ MESSAGE:
   /* ============================================================
      Clear button
      ============================================================ */
-  clearEntriesBtn.addEventListener('click', () => {
-    if (loadEntries().length === 0) return;
+  clearEntriesBtn.addEventListener('click', async () => {
+    const entries = await loadEntries();
+    if (entries.length === 0) return;
     if (window.confirm('모든 일기를 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) {
-      clearEntries();
-      renderEntries();
+      await clearEntries();
+      await renderEntries();
     }
   });
 
   /* ============================================================
      Initial render
      ============================================================ */
-  renderEntries();
+  renderEntries();  // async — intentionally not awaited at top level
   updateCharCounter();
 </script>
 
