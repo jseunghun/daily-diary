@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오늘 하루 — AI 공감 다이어리</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* ============================================================
+       Design Tokens
+       ============================================================ */
+    :root {
+      --color-bg:           #fdf8f2;
+      --color-surface:      #fffaf5;
+      --color-surface-alt:  #fff4e8;
+      --color-paper:        #fffef9;
+      --color-accent:       #e8956d;
+      --color-accent-hover: #d4774e;
+      --color-accent-light: #f7d5c2;
+      --color-gold:         #d4a853;
+      --color-gold-light:   #f5e6c2;
+      --color-text-primary: #4a3728;
+      --color-text-muted:   #9b7d6b;
+      --color-text-light:   #c4a898;
+      --color-border:       #edd9c8;
+      --color-border-light: #f5ebe0;
+      --color-shadow:       rgba(100, 60, 30, 0.08);
+      --color-shadow-md:    rgba(100, 60, 30, 0.14);
+      --color-error-bg:     #fff0f0;
+      --color-error-text:   #c0392b;
+      --color-error-border: #f5c6c6;
+
+      --radius-sm:  8px;
+      --radius-md:  16px;
+      --radius-lg:  24px;
+      --radius-xl:  32px;
+      --radius-full: 9999px;
+
+      --shadow-sm:  0 2px 8px var(--color-shadow);
+      --shadow-md:  0 4px 20px var(--color-shadow-md);
+      --shadow-lg:  0 8px 40px var(--color-shadow-md);
+
+      --font-base: 'Noto Sans KR', sans-serif;
+
+      --transition-fast:   0.15s ease;
+      --transition-normal: 0.25s ease;
+      --transition-slow:   0.4s ease;
+
+      --max-width: 680px;
+    }
+
+    /* ============================================================
+       Reset & Base
+       ============================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-base);
+      font-weight: 400;
+      background-color: var(--color-bg);
+      color: var(--color-text-primary);
+      min-height: 100vh;
+      line-height: 1.7;
+      /*
+        Subtle linen-like background texture using CSS gradients.
+        This avoids external image dependencies while giving
+        the paper / notebook feel the design calls for.
+      */
+      background-image:
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 27px,
+          rgba(212, 168, 83, 0.07) 28px
+        ),
+        radial-gradient(
+          ellipse at 20% 10%,
+          rgba(232, 149, 109, 0.06) 0%,
+          transparent 55%
+        ),
+        radial-gradient(
+          ellipse at 80% 90%,
+          rgba(212, 168, 83, 0.06) 0%,
+          transparent 55%
+        );
+    }
+
+    /* ============================================================
+       Layout Shell
+       ============================================================ */
+    .page-wrapper {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* ============================================================
+       Header
+       ============================================================ */
+    .app-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .app-header__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--color-gold-light);
+      color: var(--color-gold);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      padding: 5px 14px;
+      border-radius: var(--radius-full);
+      margin-bottom: 16px;
+      border: 1px solid rgba(212, 168, 83, 0.3);
+    }
+
+    .app-header__title {
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+
+    .app-header__subtitle {
+      margin-top: 8px;
+      font-size: 0.95rem;
+      color: var(--color-text-muted);
+      font-weight: 300;
+    }
+
+    /* Decorative accent line under title */
+    .app-header__divider {
+      width: 48px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--color-accent-light), var(--color-accent));
+      border-radius: var(--radius-full);
+      margin: 16px auto 0;
+    }
+
+    /* ============================================================
+       Date Badge
+       ============================================================ */
+    .date-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .date-badge__dot {
+      width: 8px;
+      height: 8px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .date-badge__text {
+      font-size: 0.88rem;
+      color: var(--color-text-muted);
+      font-weight: 400;
+    }
+
+    /* ============================================================
+       Diary Card (main input area)
+       ============================================================ */
+    .diary-card {
+      background: var(--color-paper);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-xl);
+      padding: 32px 32px 28px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 24px;
+      /*
+        A very subtle top-left corner "dog ear" shadow
+        reinforces the notebook/paper metaphor.
+      */
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative corner accent */
+    .diary-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(
+        135deg,
+        var(--color-accent-light) 0%,
+        transparent 60%
+      );
+      border-radius: 0 0 var(--radius-lg) 0;
+      pointer-events: none;
+    }
+
+    .diary-card__label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    /* ============================================================
+       Textarea
+       ============================================================ */
+    .diary-textarea-wrapper {
+      position: relative;
+    }
+
+    #diary-input {
+      width: 100%;
+      min-height: 160px;
+      resize: vertical;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      font-family: var(--font-base);
+      font-size: 1rem;
+      font-weight: 300;
+      line-height: 1.8;
+      padding: 16px 18px 40px;
+      transition:
+        border-color var(--transition-normal),
+        box-shadow var(--transition-normal),
+        background var(--transition-normal);
+      outline: none;
+      /*
+        Horizontal ruled lines inside the textarea simulate
+        a lined notebook page. Each line is 1.8rem * 1rem (line-height * font-size) = ~28.8px.
+      */
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent calc(1.8em - 1px),
+        rgba(212, 168, 83, 0.18) calc(1.8em - 1px),
+        rgba(212, 168, 83, 0.18) 1.8em
+      );
+      background-attachment: local;
+    }
+
+    #diary-input::placeholder {
+      color: var(--color-text-light);
+      font-style: italic;
+    }
+
+    #diary-input:focus {
+      border-color: var(--color-accent);
+      background-color: #fffef9;
+      box-shadow: 0 0 0 4px rgba(232, 149, 109, 0.1);
+    }
+
+    /* Character counter sits inside the textarea bottom-right */
+    .char-counter {
+      position: absolute;
+      bottom: 12px;
+      right: 14px;
+      font-size: 0.75rem;
+      color: var(--color-text-light);
+      pointer-events: none;
+      transition: color var(--transition-fast);
+    }
+
+    .char-counter.is-near-limit {
+      color: var(--color-gold);
+    }
+
+    .char-counter.is-at-limit {
+      color: var(--color-accent);
+      font-weight: 500;
+    }
+
+    /* ============================================================
+       Submit Button
+       ============================================================ */
+    .submit-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 18px;
+    }
+
+    #submit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(
+        135deg,
+        var(--color-accent) 0%,
+        #d4774e 100%
+      );
+      color: #fff;
+      font-family: var(--font-base);
+      font-size: 0.95rem;
+      font-weight: 500;
+      border: none;
+      border-radius: var(--radius-full);
+      padding: 13px 28px;
+      cursor: pointer;
+      transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        background var(--transition-fast),
+        opacity var(--transition-fast);
+      box-shadow: 0 4px 14px rgba(232, 149, 109, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Ripple-like shine on hover */
+    #submit-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        135deg,
+        rgba(255,255,255,0.2) 0%,
+        transparent 60%
+      );
+      opacity: 0;
+      transition: opacity var(--transition-normal);
+    }
+
+    #submit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(232, 149, 109, 0.5);
+    }
+
+    #submit-btn:hover:not(:disabled)::after {
+      opacity: 1;
+    }
+
+    #submit-btn:active:not(:disabled) {
+      transform: translateY(0) scale(0.97);
+      box-shadow: 0 2px 8px rgba(232, 149, 109, 0.35);
+      transition-duration: 0.08s;
+    }
+
+    #submit-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    #submit-btn:focus-visible {
+      outline: 3px solid var(--color-accent);
+      outline-offset: 3px;
+    }
+
+    .btn-icon {
+      font-size: 1.1em;
+      line-height: 1;
+    }
+
+    /* ============================================================
+       Loading Spinner
+       ============================================================ */
+    #loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 28px;
+      color: var(--color-text-muted);
+      font-size: 0.9rem;
+    }
+
+    #loading.hidden {
+      display: none;
+    }
+
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 2.5px solid var(--color-border);
+      border-top-color: var(--color-accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ============================================================
+       Response Container
+       ============================================================ */
+    #response-container {
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: 28px 32px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+
+      /* Fade-in animation — class toggled by JS */
+      animation: fadeSlideIn 0.45s var(--transition-slow) both;
+    }
+
+    #response-container.hidden {
+      display: none;
+    }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Emotion display row */
+    #emotion-display {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+      min-height: 36px; /* reserve space while loading */
+    }
+
+    .emotion-emoji {
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .emotion-tag {
+      display: inline-block;
+      background: rgba(232, 149, 109, 0.15);
+      color: var(--color-accent-hover);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(232, 149, 109, 0.25);
+    }
+
+    /* Divider between emotion and message */
+    .response-divider {
+      height: 1px;
+      background: var(--color-border-light);
+      margin: 0 0 18px;
+    }
+
+    /* AI empathy message */
+    #empathy-message {
+      font-size: 0.98rem;
+      font-weight: 300;
+      color: var(--color-text-primary);
+      line-height: 1.85;
+      white-space: pre-wrap;
+    }
+
+    /* Response label */
+    .response-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .response-label__dot {
+      width: 6px;
+      height: 6px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* ============================================================
+       Error Message
+       ============================================================ */
+    #error-message {
+      background: var(--color-error-bg);
+      border: 1px solid var(--color-error-border);
+      color: var(--color-error-text);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    #error-message.hidden {
+      display: none;
+    }
+
+    .error-icon {
+      font-size: 1.1em;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ============================================================
+       Previous Entries Section
+       ============================================================ */
+    .entries-section {
+      margin-top: 8px;
+    }
+
+    .entries-section__heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .entries-section__title {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .entries-clear-btn {
+      background: none;
+      border: 1px solid var(--color-border);
+      color: var(--color-text-light);
+      font-family: var(--font-base);
+      font-size: 0.75rem;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: color var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .entries-clear-btn:hover {
+      color: var(--color-accent);
+      border-color: var(--color-accent-light);
+    }
+
+    .entries-clear-btn:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+
+    /* Empty state */
+    .entries-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--color-text-light);
+      font-size: 0.9rem;
+    }
+
+    .entries-empty__icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    /* Accordion list */
+    .entries-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      list-style: none;
+    }
+
+    /* Each accordion item */
+    .entry-item {
+      background: var(--color-paper);
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--transition-normal);
+    }
+
+    .entry-item:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Accordion trigger (always visible summary row) */
+    .entry-trigger {
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-base);
+      color: var(--color-text-primary);
+      transition: background var(--transition-fast);
+    }
+
+    .entry-trigger:hover {
+      background: var(--color-surface-alt);
+    }
+
+    .entry-trigger:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: -2px;
+    }
+
+    .entry-trigger__date {
+      font-size: 0.72rem;
+      color: var(--color-text-muted);
+      white-space: nowrap;
+    }
+
+    .entry-trigger__preview {
+      font-size: 0.88rem;
+      color: var(--color-text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 300;
+    }
+
+    .entry-trigger__chevron {
+      color: var(--color-text-light);
+      font-size: 0.7rem;
+      transition: transform var(--transition-normal);
+      flex-shrink: 0;
+    }
+
+    .entry-item[aria-expanded="true"] .entry-trigger__chevron {
+      transform: rotate(180deg);
+    }
+
+    /* Accordion panel (collapsible) */
+    .entry-panel {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows var(--transition-normal);
+    }
+
+    .entry-item[aria-expanded="true"] .entry-panel {
+      grid-template-rows: 1fr;
+    }
+
+    .entry-panel__inner {
+      overflow: hidden;
+    }
+
+    .entry-panel__body {
+      border-top: 1px solid var(--color-border-light);
+      padding: 16px 20px 20px;
+    }
+
+    .entry-panel__diary-text {
+      font-size: 0.9rem;
+      color: var(--color-text-primary);
+      font-weight: 300;
+      line-height: 1.75;
+      margin-bottom: 14px;
+    }
+
+    .entry-panel__ai-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--color-accent);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .entry-panel__emotion-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .entry-panel__ai-text {
+      font-size: 0.88rem;
+      color: var(--color-text-muted);
+      font-weight: 300;
+      line-height: 1.75;
+      white-space: pre-wrap;
+    }
+
+    /* ============================================================
+       Responsive — Tablet & Mobile
+       ============================================================ */
+    @media (max-width: 600px) {
+      .page-wrapper {
+        padding: 24px 16px 60px;
+      }
+
+      .diary-card {
+        padding: 24px 20px 20px;
+      }
+
+      #response-container {
+        padding: 22px 20px;
+      }
+
+      #submit-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .submit-row {
+        justify-content: stretch;
+      }
+    }
+
+    /* ============================================================
+       Reduced motion — respect user preference
+       ============================================================ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- ===== Header ===== -->
+  <header class="app-header" role="banner">
+    <div class="app-header__badge" aria-hidden="true">
+      <span>✨</span> AI 공감 다이어리
+    </div>
+    <h1 class="app-header__title">오늘 하루 어땠나요?</h1>
+    <p class="app-header__subtitle">당신의 이야기를 들려주세요. 함께 느껴볼게요.</p>
+    <div class="app-header__divider" aria-hidden="true"></div>
+  </header>
+
+  <!-- ===== Main ===== -->
+  <main>
+
+    <!-- Date badge -->
+    <div class="date-badge" aria-label="오늘 날짜">
+      <span class="date-badge__dot" aria-hidden="true"></span>
+      <span class="date-badge__text" id="today-date"></span>
+    </div>
+
+    <!-- Diary input card -->
+    <section class="diary-card" aria-label="일기 입력">
+      <p class="diary-card__label" id="diary-label">오늘 일기</p>
+
+      <div class="diary-textarea-wrapper">
+        <label for="diary-input" class="visually-hidden">오늘 있었던 일을 입력하세요</label>
+        <textarea
+          id="diary-input"
+          aria-labelledby="diary-label"
+          aria-describedby="char-count-hint"
+          placeholder="오늘 있었던 일을 적어보세요..."
+          maxlength="500"
+          rows="6"
+          spellcheck="false"
+        ></textarea>
+        <span
+          class="char-counter"
+          id="char-count-hint"
+          aria-live="polite"
+          aria-atomic="true"
+        >0 / 500</span>
+      </div>
+
+      <div class="submit-row">
+        <button
+          id="submit-btn"
+          type="button"
+          aria-label="일기를 AI에게 보내고 공감 메시지 받기"
+          disabled
+        >
+          <span class="btn-icon" aria-hidden="true">💌</span>
+          마음 보내기
+        </button>
+      </div>
+    </section>
+
+    <!-- Loading indicator -->
+    <div
+      id="loading"
+      class="hidden"
+      role="status"
+      aria-live="polite"
+      aria-label="AI가 응답을 생성하고 있습니다"
+    >
+      <span class="spinner" aria-hidden="true"></span>
+      <span>AI가 당신의 이야기를 읽고 있어요...</span>
+    </div>
+
+    <!-- Error message -->
+    <div
+      id="error-message"
+      class="hidden"
+      role="alert"
+      aria-live="assertive"
+    >
+      <span class="error-icon" aria-hidden="true">⚠️</span>
+      <span id="error-text">오류가 발생했습니다. 잠시 후 다시 시도해 주세요.</span>
+    </div>
+
+    <!-- AI Response container -->
+    <section
+      id="response-container"
+      class="hidden"
+      aria-label="AI 공감 메시지"
+      aria-live="polite"
+    >
+      <div class="response-label">
+        <span class="response-label__dot" aria-hidden="true"></span>
+        AI의 공감 메시지
+      </div>
+
+      <!-- Emotion emoji + tags -->
+      <div
+        id="emotion-display"
+        role="region"
+        aria-label="감정 분석 결과"
+      >
+        <!-- Populated by JS: emotion emoji + emotion-tag spans -->
+      </div>
+
+      <hr class="response-divider" aria-hidden="true" />
+
+      <!-- Empathy message body -->
+      <p id="empathy-message" tabindex="-1">
+        <!-- Populated by JS -->
+      </p>
+    </section>
+
+    <!-- ===== Previous entries ===== -->
+    <section class="entries-section" aria-label="이전 일기 목록">
+      <div class="entries-section__heading">
+        <h2 class="entries-section__title">이전 일기</h2>
+        <button
+          class="entries-clear-btn"
+          id="clear-entries-btn"
+          type="button"
+          aria-label="모든 이전 일기 삭제"
+        >전체 삭제</button>
+      </div>
+
+      <div id="entries-list-container">
+        <!-- Populated by renderEntries() -->
+      </div>
+    </section>
+
+  </main>
+
+</div><!-- /.page-wrapper -->
+
+<!-- ============================================================
+     Visually hidden utility (accessibility)
+     ============================================================ -->
+<style>
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
+
+<!-- ============================================================
+     OpenRouter API Integration
+     ============================================================ -->
+<script>
+  const OPENROUTER_API_KEY = '';
+  const MODEL = 'google/gemma-3-12b-it:free';
+
+  function parseAIResponse(text) {
+    const emojiMatch = text.match(/^EMOJI:\s*(.+)$/m);
+    const tagsMatch  = text.match(/^TAGS:\s*(.+)$/m);
+    const msgMatch   = text.match(/MESSAGE:\s*\n([\s\S]+)/m);
+
+    const emoji = emojiMatch ? emojiMatch[1].trim() : '💙';
+    const tags  = tagsMatch
+      ? tagsMatch[1].split(',').map(t => t.trim()).filter(Boolean)
+      : [];
+    const message = msgMatch
+      ? msgMatch[1].trim()
+      : text
+          .replace(/^EMOJI:.+$/m, '')
+          .replace(/^TAGS:.+$/m, '')
+          .replace(/^MESSAGE:\s*/m, '')
+          .trim();
+
+    return { emoji, tags, message };
+  }
+
+  async function analyzeAndEmpathize(diaryText) {
+    if (!diaryText || diaryText.trim().length === 0) {
+      throw new Error('일기 내용을 입력해 주세요.');
+    }
+
+    const systemPrompt = `당신은 따뜻하고 공감 능력이 뛰어난 감정 상담 AI입니다.
+사용자가 하루 있었던 일을 짧게 적어 보내면, 아래 형식으로 정확히 응답해 주세요.
+
+응답 형식:
+EMOJI: [상황에 맞는 감정 이모지 1개]
+TAGS: [감정 태그1, 감정 태그2]
+MESSAGE:
+[공감 메시지 본문]
+
+규칙:
+- EMOJI는 이모지 1개만 작성합니다
+- TAGS는 쉼표로 구분된 한국어 감정 태그 1~3개입니다 (예: 피로, 불안, 외로움)
+- MESSAGE: 다음 줄부터 따뜻한 공감과 위로 메시지를 3~5문장으로 작성합니다
+- 모든 내용은 한국어로 작성합니다
+- 판단이나 조언보다 공감과 위로에 집중합니다
+- 친근하고 따뜻한 말투를 사용합니다`;
+
+    let response;
+    try {
+      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.href,
+          'X-Title': 'AI 공감 다이어리',
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user',   content: `오늘 있었던 일: ${diaryText.trim()}` },
+          ],
+          temperature: 0.8,
+          max_tokens: 600,
+          top_p: 0.9,
+        }),
+      });
+    } catch {
+      throw new Error('네트워크 연결을 확인해 주세요. 인터넷이 연결되어 있는지 확인 후 다시 시도해 주세요.');
+    }
+
+    if (!response.ok) {
+      const msgs = {
+        401: 'API 인증에 실패했습니다. API 키를 확인해 주세요.',
+        402: 'API 크레딧이 부족합니다.',
+        429: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.',
+        503: 'AI 서비스가 일시적으로 사용 불가 상태입니다. 잠시 후 다시 시도해 주세요.',
+      };
+      throw new Error(msgs[response.status] || `서버 오류가 발생했습니다. (상태 코드: ${response.status})`);
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error('AI 응답을 처리하는 중 오류가 발생했습니다. 다시 시도해 주세요.');
+    }
+
+    const aiMessage = data?.choices?.[0]?.message?.content;
+    if (!aiMessage || aiMessage.trim().length === 0) {
+      throw new Error('AI로부터 유효한 응답을 받지 못했습니다. 다시 시도해 주세요.');
+    }
+
+    return parseAIResponse(aiMessage.trim());
+  }
+</script>
+
+<script>
+  /* ============================================================
+     Constants & State
+     ============================================================ */
+  const STORAGE_KEY = 'ai_diary_entries';
+  const MAX_CHARS   = 500;
+  const NEAR_LIMIT  = 420; // ~84% — triggers yellow counter
+
+  /* ============================================================
+     DOM References
+     ============================================================ */
+  const diaryInput        = document.getElementById('diary-input');
+  const submitBtn         = document.getElementById('submit-btn');
+  const charCountHint     = document.getElementById('char-count-hint');
+  const loadingEl         = document.getElementById('loading');
+  const errorMessageEl    = document.getElementById('error-message');
+  const errorTextEl       = document.getElementById('error-text');
+  const responseContainer = document.getElementById('response-container');
+  const emotionDisplay    = document.getElementById('emotion-display');
+  const empathyMessage    = document.getElementById('empathy-message');
+  const entriesContainer  = document.getElementById('entries-list-container');
+  const clearEntriesBtn   = document.getElementById('clear-entries-btn');
+  const todayDateEl       = document.getElementById('today-date');
+
+  /* ============================================================
+     Date helpers
+     ============================================================ */
+  function formatDate(date) {
+    const d = date instanceof Date ? date : new Date(date);
+    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+    return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${weekdays[d.getDay()]})`;
+  }
+
+  function formatDateTime(date) {
+    const d = date instanceof Date ? date : new Date(date);
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${formatDate(d)} ${hh}:${mm}`;
+  }
+
+  // Render today's date in the header badge
+  todayDateEl.textContent = formatDate(new Date());
+
+  /* ============================================================
+     Character counter
+     ============================================================ */
+  function updateCharCounter() {
+    const len = diaryInput.value.length;
+    charCountHint.textContent = `${len} / ${MAX_CHARS}`;
+
+    charCountHint.classList.remove('is-near-limit', 'is-at-limit');
+    if (len >= MAX_CHARS) {
+      charCountHint.classList.add('is-at-limit');
+    } else if (len >= NEAR_LIMIT) {
+      charCountHint.classList.add('is-near-limit');
+    }
+
+    // Enable / disable submit button
+    submitBtn.disabled = len === 0;
+  }
+
+  diaryInput.addEventListener('input', updateCharCounter);
+
+  // Allow Ctrl/Cmd+Enter to submit
+  diaryInput.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      if (!submitBtn.disabled) submitBtn.click();
+    }
+  });
+
+  /* ============================================================
+     UI state helpers
+     ============================================================ */
+  function showLoading() {
+    loadingEl.classList.remove('hidden');
+    responseContainer.classList.add('hidden');
+    hideError();
+    submitBtn.disabled = true;
+    submitBtn.setAttribute('aria-busy', 'true');
+  }
+
+  function hideLoading() {
+    loadingEl.classList.add('hidden');
+    submitBtn.disabled = diaryInput.value.length === 0;
+    submitBtn.removeAttribute('aria-busy');
+  }
+
+  function showError(message) {
+    errorTextEl.textContent = message || '오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+    errorMessageEl.classList.remove('hidden');
+  }
+
+  function hideError() {
+    errorMessageEl.classList.add('hidden');
+  }
+
+  /**
+   * Renders the AI response into the response container.
+   *
+   * @param {{ emoji: string, tags: string[], message: string }} result
+   *   - emoji:   e.g. "😊"
+   *   - tags:    e.g. ["설렘", "기대"]
+   *   - message: the empathy body text
+   */
+  function renderResponse(result) {
+    // Build emotion display
+    emotionDisplay.innerHTML = '';
+    if (result.emoji) {
+      const emojiEl = document.createElement('span');
+      emojiEl.className = 'emotion-emoji';
+      emojiEl.textContent = result.emoji;
+      emojiEl.setAttribute('aria-hidden', 'true');
+      emotionDisplay.appendChild(emojiEl);
+    }
+    (result.tags || []).forEach((tag) => {
+      const tagEl = document.createElement('span');
+      tagEl.className = 'emotion-tag';
+      tagEl.textContent = tag;
+      emotionDisplay.appendChild(tagEl);
+    });
+
+    // Set the empathy message text
+    empathyMessage.textContent = result.message || '';
+
+    // Show the container with animation
+    responseContainer.classList.remove('hidden');
+
+    // Move focus to the message for screen readers
+    empathyMessage.focus();
+  }
+
+  /* ============================================================
+     Submit handler — calls analyzeAndEmpathize (to be implemented)
+     ============================================================ */
+  submitBtn.addEventListener('click', async () => {
+    const text = diaryInput.value.trim();
+    if (!text) return;
+
+    showLoading();
+
+    try {
+      /*
+        analyzeAndEmpathize(text) is defined externally and must return:
+        {
+          emoji:   string,        // e.g. "😊"
+          tags:    string[],      // e.g. ["행복", "감사"]
+          message: string         // empathy body text
+        }
+      */
+      const result = await analyzeAndEmpathize(text);
+
+      hideLoading();
+      renderResponse(result);
+
+      // Persist entry to localStorage
+      saveEntry({
+        text,
+        emoji:   result.emoji   || '',
+        tags:    result.tags    || [],
+        message: result.message || '',
+        date:    new Date().toISOString(),
+      });
+
+      renderEntries();
+
+      // Clear the textarea after successful save
+      diaryInput.value = '';
+      updateCharCounter();
+
+    } catch (err) {
+      hideLoading();
+      showError(
+        err && err.message
+          ? err.message
+          : '오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+      );
+      console.error('[AI Diary] analyzeAndEmpathize error:', err);
+    }
+  });
+
+  /* ============================================================
+     localStorage helpers
+     ============================================================ */
+  function loadEntries() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveEntry(entry) {
+    const entries = loadEntries();
+    // Newest first
+    entries.unshift(entry);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  function clearEntries() {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  /* ============================================================
+     Accordion — render previous entries
+     ============================================================ */
+  function renderEntries() {
+    const entries = loadEntries();
+    entriesContainer.innerHTML = '';
+
+    if (entries.length === 0) {
+      entriesContainer.innerHTML = `
+        <div class="entries-empty" role="status">
+          <span class="entries-empty__icon" aria-hidden="true">📖</span>
+          아직 작성된 일기가 없어요.<br>오늘 하루를 기록해 보세요!
+        </div>`;
+      return;
+    }
+
+    const list = document.createElement('ul');
+    list.className = 'entries-list';
+    list.setAttribute('role', 'list');
+
+    entries.forEach((entry, idx) => {
+      const itemId   = `entry-${idx}`;
+      const panelId  = `entry-panel-${idx}`;
+
+      const li = document.createElement('li');
+      li.className = 'entry-item';
+      li.setAttribute('aria-expanded', 'false');
+
+      // Truncate preview text for the trigger
+      const preview = entry.text.length > 40
+        ? entry.text.slice(0, 40) + '…'
+        : entry.text;
+
+      // Build emotion tags HTML for panel
+      const tagsHtml = (entry.tags || []).map(
+        (t) => `<span class="emotion-tag">${t}</span>`
+      ).join('');
+
+      li.innerHTML = `
+        <button
+          class="entry-trigger"
+          id="${itemId}"
+          aria-controls="${panelId}"
+          aria-expanded="false"
+          type="button"
+        >
+          <span class="entry-trigger__date">${formatDate(entry.date)}</span>
+          <span class="entry-trigger__preview">${escapeHtml(preview)}</span>
+          <span class="entry-trigger__chevron" aria-hidden="true">▼</span>
+        </button>
+        <div
+          class="entry-panel"
+          id="${panelId}"
+          role="region"
+          aria-labelledby="${itemId}"
+        >
+          <div class="entry-panel__inner">
+            <div class="entry-panel__body">
+              <p class="entry-panel__diary-text">${escapeHtml(entry.text)}</p>
+              ${(entry.emoji || tagsHtml) ? `
+                <div class="entry-panel__ai-label">AI 감정 분석</div>
+                <div class="entry-panel__emotion-tags">
+                  ${entry.emoji ? `<span class="emotion-emoji" aria-hidden="true">${entry.emoji}</span>` : ''}
+                  ${tagsHtml}
+                </div>
+              ` : ''}
+              ${entry.message ? `
+                <div class="entry-panel__ai-label">공감 메시지</div>
+                <p class="entry-panel__ai-text">${escapeHtml(entry.message)}</p>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Accordion toggle behaviour
+      const trigger = li.querySelector('.entry-trigger');
+      trigger.addEventListener('click', () => {
+        const expanded = li.getAttribute('aria-expanded') === 'true';
+        li.setAttribute('aria-expanded', String(!expanded));
+        trigger.setAttribute('aria-expanded', String(!expanded));
+      });
+
+      list.appendChild(li);
+    });
+
+    entriesContainer.appendChild(list);
+  }
+
+  /* ============================================================
+     XSS-safe text escape
+     ============================================================ */
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  /* ============================================================
+     Clear button
+     ============================================================ */
+  clearEntriesBtn.addEventListener('click', () => {
+    if (loadEntries().length === 0) return;
+    if (window.confirm('모든 일기를 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) {
+      clearEntries();
+      renderEntries();
+    }
+  });
+
+  /* ============================================================
+     Initial render
+     ============================================================ */
+  renderEntries();
+  updateCharCounter();
+</script>
+
+</body>
+</html>
