@@ -898,7 +898,13 @@
      OpenRouter API Integration
      ============================================================ -->
 <script>
-  const OPENROUTER_API_KEY = '';
+  let OPENROUTER_API_KEY = localStorage.getItem('openrouter_api_key');
+  if (!OPENROUTER_API_KEY) {
+    OPENROUTER_API_KEY = prompt('OpenRouter API 키를 입력하세요:');
+    if (OPENROUTER_API_KEY) {
+      localStorage.setItem('openrouter_api_key', OPENROUTER_API_KEY);
+    }
+  }
   const MODEL = 'google/gemma-3-12b-it:free';
 
   function parseAIResponse(text) {
