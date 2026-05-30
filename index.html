@@ -912,7 +912,7 @@
       localStorage.setItem('openrouter_api_key', OPENROUTER_API_KEY);
     }
   }
-  const MODEL = 'google/gemma-3-12b-it:free';
+  const MODEL = 'meta-llama/llama-3.1-8b-instruct:free';
 
   /*
     BUG-5 & BUG-8 FIX: parseAIResponse 개선
@@ -996,7 +996,12 @@ MESSAGE:
         429: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.',
         503: 'AI 서비스가 일시적으로 사용 불가 상태입니다. 잠시 후 다시 시도해 주세요.',
       };
-      throw new Error(msgs[response.status] || `서버 오류가 발생했습니다. (상태 코드: ${response.status})`);
+      let errDetail = '';
+      try {
+        const errBody = await response.json();
+        errDetail = errBody?.error?.message || JSON.stringify(errBody);
+      } catch {}
+      throw new Error(msgs[response.status] || `서버 오류가 발생했습니다. (${response.status}: ${errDetail})`);
     }
 
     let data;
