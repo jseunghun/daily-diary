@@ -912,7 +912,7 @@
       localStorage.setItem('openrouter_api_key', OPENROUTER_API_KEY);
     }
   }
-  const MODEL = 'openrouter/free';
+  const MODEL = 'google/gemma-3-12b-it:free';
 
   /*
     BUG-5 & BUG-8 FIX: parseAIResponse 개선
@@ -1008,7 +1008,8 @@ MESSAGE:
 
     const aiMessage = data?.choices?.[0]?.message?.content;
     if (!aiMessage || aiMessage.trim().length === 0) {
-      throw new Error('AI로부터 유효한 응답을 받지 못했습니다. 다시 시도해 주세요.');
+      const reason = data?.error?.message || data?.choices?.[0]?.finish_reason || JSON.stringify(data);
+      throw new Error(`AI로부터 유효한 응답을 받지 못했습니다. (${reason})`);
     }
 
     return parseAIResponse(aiMessage.trim());
